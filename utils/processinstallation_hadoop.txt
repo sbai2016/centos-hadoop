@@ -1,0 +1,70 @@
+Pré requis à l'installation d'Hadoop
+
+Installation Java JDK 1.8 sous /usr/java/
+
+Récupération des tarball Hortonworks
+http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.2.0/HDP-2.6.2.0-centos7-rpm.tar.gz
+http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos7/HDP-UTILS-1.1.0.21-centos7.tar.gz
+
+Une fois récupéré, les détarés
+tar -xzvf HDP-2.6.2.0-centos7-rpm.tar.gz -C /var/www/html/hdp/.
+tar -xzvf HDP-UTILS-1.1.0.21-centos7.tar.gz -C /var/www/html/hdp/.
+
+Copier le fichier hdp.repo situé dans le dossier détaré de HDP-2.6.2.0-centos7 dans /etc/yum.repos.d/.
+
+Editer le fichier hdp.repo en modifiant les valeurs de baseurl et gpgkey pour popinter sur l'apache local
+Pour exemple :
+#VERSION_NUMBER=2.6.4.0-91
+[HDP-2.6.4.0]
+name=HDP Version - HDP-2.6.4.0
+baseurl=http://55.15.0.88/hdp/HDP/centos7/2.6.4.0-91
+gpgcheck=1
+gpgkey=http://55.15.0.88/hdp/HDP/centos7/2.6.4.0-91/RPM-GPG-KEY/RPM-GPG-KEY-Jenkins
+enabled=1
+priority=1
+
+[HDP-UTILS-1.1.0.21]
+name=HDP-UTILS Version - HDP-UTILS-1.1.0.21
+baseurl=http://55.15.0.88/hdp/HDP-UTILS-1.1.0.21
+gpgcheck=1
+gpgkey=http://55.15.0.88/hdp/HDP-UTILS-1.1.0.21/RPM-GPG-KEY/RPM-GPG-KEY-Jenkins
+enabled=1
+priority=1
+
+
+Processus d'installation
+creation du groupe hadoop
+groupadd hadoop
+création de l'utilisateur hdfs
+useradd -g hadoop -G wheel hdfs
+
+Si plusieurs machines : 
+sous le user hdfs :
+utilisation des fonctionnalitées ssh-keygen puis ssh-copy-id pour communiquer entre chaque noeud
+
+En root ou sudoers
+Création des répertoires
+mkdir -p /var/data/hadoop/hdfs/nn
+mkdir -p /var/data/hadoop/hdfs/snn
+mkdir -p /var/data/hadoop/hdfs/rm
+mkdir -p /var/data/hadoop/hdfs/dn
+chown -R hdfs:hadoop /var/data/hadoop/hdfs
+
+
+su - hdfs
+Ajout de JAVA_HOME dans le profile du user hdfs
+sudo yum install hadoop hadoop-hdfs hadoop-libhdfs hadoop-client openssl
+sudo yum install snappy snappy-devel
+
+Editer les fichiers de configurations situés sous /etc/hadoop/conf [je vous fournis les configs du poc P8 à ajuster : hdfs-site.xml et core-site.xml]
+
+sur la machine namenode
+/usr/hdp/current/hadoop-hdfs-namenode/../hadoop/bin/hdfs namenode -format
+/usr/hdp/current/hadoop-hdfs-namenode/../hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode
+
+sur la machine secondary namenode
+/usr/hdp/current/hadoop-hdfs-secondarynamenode/../hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode
+
+sur les machines datanodes
+/usr/hdp/current/hadoop-hdfs-datanode/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
+
